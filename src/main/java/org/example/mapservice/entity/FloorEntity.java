@@ -17,13 +17,10 @@ public class FloorEntity {
     @Column(name = "floor_id")
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "office_id", nullable = false)
-    private OfficeEntity office;
-
     @Column(name = "floor_number", nullable = false)
     private Integer floorNumber;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "office_id", nullable = false)
+    private OfficeEntity office;
 }

@@ -2,17 +2,14 @@ package org.example.mapservice.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mapservice.dto.MapDto;
+import org.example.mapservice.dto.OfficeDto;
+import org.example.mapservice.dto.ObjectDto;
+import org.example.mapservice.dto.ObjectRequest;
 import org.example.mapservice.entity.FloorEntity;
-import org.example.mapservice.entity.FloorMapEntity;
-import org.example.mapservice.entity.OfficeEntity;
-import org.example.mapservice.repository.FloorMapRepository;
-import org.example.mapservice.repository.FloorRepository;
-import org.example.mapservice.repository.OfficeRepository;
 import org.example.mapservice.service.MapService;
+import org.example.mapservice.service.OfficeService;
+import org.example.mapservice.service.ObjectService;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,34 +23,28 @@ import java.util.List;
 @RequestMapping("/api")
 public class MapController {
 
-    private final OfficeRepository officeRepository;
-    private final FloorRepository floorRepository;
+    private final OfficeService officeService;
     private final MapService mapService;
+    private final ObjectService objectService;
 
-    // --- OFFICE (PROJECT) ---
-
-    @GetMapping("/office")
-    public List<OfficeEntity> getAllProjects() {
-        return officeRepository.findAll();
+    // ===== OFFICE =====
+    @GetMapping("/offices")
+    public List<OfficeDto> getAllOffices() {
+        return officeService.getAllOffices();
     }
 
-    @PostMapping("/office")
-    public OfficeEntity createProject(@RequestBody OfficeEntity project) {
-        return officeRepository.save(project);
+    @PostMapping("/offices")
+    public ResponseEntity<OfficeDto> createOffice(@RequestBody OfficeDto request) {
+        return ResponseEntity.ok(officeService.createOffice(request));
     }
 
-    // --- FLOOR ---
-
-    @PostMapping("/office/{officeId}/floors")
+    // ===== FLOOR =====
+    @PostMapping("/offices/{officeId}/floors")
     public FloorEntity createFloor(@PathVariable Long officeId, @RequestBody FloorEntity floor) {
-        OfficeEntity office = officeRepository.findById(officeId)
-                .orElseThrow(() -> new RuntimeException("office not found"));
-        floor.setOffice(office);
-        return floorRepository.save(floor);
+        return officeService.createFloor(officeId, floor);
     }
 
-    // --- FLOOR MAP ---
-
+    // ===== FLOOR MAP =====
     @GetMapping("/floors/{floorId}/maps")
     public List<MapDto> getMapsByFloor(@PathVariable Long floorId) {
         return mapService.listByFloor(floorId);
@@ -76,5 +67,32 @@ public class MapController {
     public ResponseEntity<?> deleteMap(@PathVariable Long mapId) throws IOException {
         mapService.deleteMap(mapId);
         return ResponseEntity.ok().build();
+    }
+
+    // ===== OBJECTS =====
+    @PostMapping("/objects")
+    public ResponseEntity<ObjectDto> createObject(@RequestBody ObjectRequest req) {
+        return ResponseEntity.ok(objectService.create(req));
+    }
+
+    @GetMapping("/objects/{id}")
+    public ResponseEntity<ObjectDto> getObject(@PathVariable Long id) {
+        return ResponseEntity.ok(objectService.get(id));
+    }
+
+    @GetMapping("/objects/floor/{floorId}")
+    public ResponseEntity<List<ObjectDto>> listObjectsByFloor(@PathVariable Long floorId) {
+        return ResponseEntity.ok(objectService.listByFloor(floorId));
+    }
+
+    @GetMapping("/objects/type/{type}")
+    public ResponseEntity<List<ObjectDto>> listObjectsByType(@PathVariable String type) {
+        return ResponseEntity.ok(objectService.listByType(type));
+    }
+
+    @DeleteMapping("/objects/{id}")
+    public ResponseEntity<Void> deleteObject(@PathVariable Long id) {
+        objectService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -3,6 +3,8 @@ package org.example.mapservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "office")
 @Getter
@@ -17,12 +19,12 @@ public class OfficeEntity {
     @Column(name = "office_id")
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 255, nullable = false)
     private String name;
 
-    @Column(length = 200)
+    @Column(length = 255)
     private String address;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @OneToMany(mappedBy = "office", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FloorEntity> floors;
 }
